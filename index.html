@@ -307,7 +307,8 @@
                     disponible: false,
                     motivo: err.message || "Permiso denegado"
                 }),
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                // CAMBIO AQUÍ: Aumentamos el timeout a 30 segundos para evitar fallos en apps
+                { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
             );
         });
     }
