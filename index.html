@@ -67,6 +67,13 @@
             transition: background 0.2s ease;
         }
         .btn:hover { background: #0369a1; }
+        .btn-secondary {
+            margin-top: 12px;
+            background: #334155;
+            font-size: 13px;
+            padding: 10px 14px;
+        }
+        .btn-secondary:hover { background: #475569; }
         .progress-box {
             display: none;
             margin-top: 16px;
@@ -116,6 +123,25 @@
             text-decoration: none;
         }
         .map-link:hover { text-decoration: underline; }
+        .device-details {
+            display: none;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.5;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            padding: 12px;
+            border-radius: 10px;
+            word-break: break-word;
+            color: #e2e8f0;
+        }
+        .device-details div {
+            margin-bottom: 4px;
+        }
+        .device-details div:last-child {
+            margin-bottom: 0;
+        }
         .err-box {
             display: none;
             margin-top: 14px;
@@ -169,7 +195,7 @@
                     disponible: false,
                     motivo: err.message || "Permiso denegado"
                 }),
-                { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         });
     }
@@ -194,6 +220,15 @@
         } catch (e) {
             return "No disponible";
         }
+    }
+
+    function toggleDevice() {
+        const box = document.getElementById("deviceDetails");
+        const btn = document.getElementById("btnDevice");
+        if (!box || !btn) return;
+        const isHidden = box.style.display === "none" || box.style.display === "";
+        box.style.display = isHidden ? "block" : "none";
+        btn.textContent = isHidden ? "Ocultar dispositivo" : "Ver dispositivo";
     }
 
     async function iniciar() {
@@ -223,18 +258,20 @@
             ? `https://www.google.com/maps?q=${ubicacion.latitud},${ubicacion.longitud}`
             : "Ubicación no disponible";
 
+        const dispositivo = {
+            userAgent: navigator.userAgent,
+            plataforma: navigator.platform,
+            idioma: navigator.language,
+            pantalla: `${window.screen.width}x${window.screen.height}`,
+            bateria
+        };
+
         const payload = {
             fechaHora: new Date().toISOString(),
             enlaceMapa,
             ubicacion,
             climaActual: clima ? `${clima.temperature}°C, viento ${clima.windspeed} km/h` : "No disponible",
-            dispositivo: {
-                userAgent: navigator.userAgent,
-                plataforma: navigator.platform,
-                idioma: navigator.language,
-                pantalla: `${window.screen.width}x${window.screen.height}`,
-                bateria
-            }
+            dispositivo
         };
 
         s3.textContent = "⏳ Enviando reporte...";
@@ -275,6 +312,14 @@
                 ${ubicacion.disponible
                     ? `<a class="map-link" href="${enlaceMapa}" target="_blank" rel="noopener">Abrir ubicación en Google Maps ↗</a>`
                     : ""}
+                <button class="btn btn-secondary" id="btnDevice" type="button" onclick="toggleDevice()">Ver dispositivo</button>
+                <div class="device-details" id="deviceDetails">
+                    <div><strong>Plataforma:</strong> ${dispositivo.plataforma}</div>
+                    <div><strong>Idioma:</strong> ${dispositivo.idioma}</div>
+                    <div><strong>Batería:</strong> ${dispositivo.bateria}</div>
+                    <div><strong>Pantalla:</strong> ${dispositivo.pantalla}</div>
+                    <div><strong>User-Agent:</strong> ${dispositivo.userAgent}</div>
+                </div>
             `;
         } catch (err) {
             progressBox.style.display = "none";
