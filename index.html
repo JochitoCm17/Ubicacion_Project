@@ -307,8 +307,7 @@
                     disponible: false,
                     motivo: err.message || "Permiso denegado"
                 }),
-                // CAMBIO AQUÍ: Aumentamos el timeout a 30 segundos para evitar fallos en apps
-                { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         });
     }
@@ -342,6 +341,7 @@
 
         if (/Android/.test(userAgent)) {
             os = "Android";
+            // Intentar extraer modelo aproximado si está presente en el UA
             const match = userAgent.match(/;\s*([a-zA-Z0-9]+)\s*Build\//);
             if (match && match[1]) device = "Android " + match[1];
             else device = "Dispositivo Android";
@@ -407,6 +407,7 @@
                 idioma: navigator.language,
                 pantalla: `${window.screen.width}x${window.screen.height}`,
                 bateria,
+                // Añadimos los campos específicos solicitados
                 sistemaOperativo: infoDispositivo.sistemaOperativo,
                 dispositivoExacto: infoDispositivo.dispositivoExacto
             }
